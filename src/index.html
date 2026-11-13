@@ -449,6 +449,24 @@ footer .wrap {
   cursor: pointer;
 }
 .lightbox-close:hover { background: rgba(255,255,255,.22); }
+.lightbox-inner > div { position: absolute; inset: 0; }
+.lightbox-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(255,255,255,.92);
+  color: #15202B;
+  font: inherit;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0,0,0,.35);
+}
+.lightbox-hint:hover { background: #fff; }
 @media (max-width: 620px) {
   .lightbox { padding-top: 64px; }
   .lightbox-inner { height: min(70vh, 640px); }
@@ -614,7 +632,8 @@ footer .wrap {
 <div class="lightbox" id="lightbox" data-ratio="tall" hidden>
   <button class="lightbox-close" id="lightboxClose" type="button" aria-label="關閉影片">✕</button>
   <div class="lightbox-inner">
-    <iframe id="player" title="影片播放器" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <div id="playerHost"></div>
+    <button class="lightbox-hint" id="lightboxHint" type="button" hidden>🔊 點一下開聲音</button>
   </div>
 </div>
 
@@ -651,30 +670,75 @@ footer .wrap {
 })();
 </script>
 
+<script src="https://www.youtube.com/iframe_api"></script>
 <script>
-/* 點影片卡 → 原地彈出 YouTube 播放器，不跳離網頁。
+/* 點影片卡 → 原地彈出播放器並立刻開始播，不跳離網頁。
+   瀏覽器普遍會擋「有聲自動播放」，所以先試有聲，
+   1.2 秒內沒真的播起來就改成靜音播放，再給一顆「開聲音」。
    仍保留原本的 <a href>，所以按 ⌘ 或中鍵一樣能開新分頁。 */
 (function () {
   var box = document.getElementById('lightbox');
-  var frame = document.getElementById('player');
+  var host = document.getElementById('playerHost');
   var closeBtn = document.getElementById('lightboxClose');
-  if (!box || !frame || !closeBtn) return;
+  var hint = document.getElementById('lightboxHint');
+  if (!box || !host || !closeBtn || !hint) return;
 
+  var player = null;
   var lastFocus = null;
+  var waiting = [];
+
+  function whenApiReady(fn) {
+    if (window.YT && window.YT.Player) { fn(); return; }
+    waiting.push(fn);
+  }
+  window.onYouTubeIframeAPIReady = function () {
+    waiting.splice(0).forEach(function (fn) { fn(); });
+  };
+
+  function playing(state) {
+    return state === 1 || state === 3;   // 1 = 播放中，3 = 緩衝中
+  }
 
   function open(id, ratio, trigger) {
     lastFocus = trigger || null;
     box.dataset.ratio = ratio;
-    frame.src = 'https://www.youtube-nocookie.com/embed/' + id +
-                '?autoplay=1&rel=0&playsinline=1';
     box.hidden = false;
+    hint.hidden = true;
+    host.innerHTML = '<div id="ytplayer"></div>';
     document.documentElement.style.overflow = 'hidden';
     closeBtn.focus();
+
+    whenApiReady(function () {
+      if (box.hidden) return;
+      player = new YT.Player('ytplayer', {
+        host: 'https://www.youtube-nocookie.com',
+        videoId: id,
+        playerVars: { autoplay: 1, rel: 0, playsinline: 1, modestbranding: 1 },
+        events: {
+          onReady: function (e) {
+            try { e.target.playVideo(); } catch (err) {}
+            setTimeout(function () {
+              if (!player || !player.getPlayerState) return;
+              try {
+                if (!playing(player.getPlayerState())) {
+                  player.mute();
+                  player.playVideo();
+                  hint.hidden = false;      // 被擋下來了，改靜音播並提示
+                }
+              } catch (err) {}
+            }, 1200);
+          }
+        }
+      });
+    });
   }
 
   function close() {
     box.hidden = true;
-    frame.src = '';                       // 清掉才會真的停止播放
+    hint.hidden = true;
+    if (player && player.destroy) { try { player.destroy(); } catch (err) {} }
+    player = null;
+    host.innerHTML = '';
     document.documentElement.style.overflow = '';
     if (lastFocus && lastFocus.focus) lastFocus.focus();
     lastFocus = null;
@@ -689,6 +753,12 @@ footer .wrap {
     if (!m) return;
     e.preventDefault();
     open(m[1], link.classList.contains('vlog') ? 'wide' : 'tall', link);
+  });
+
+  hint.addEventListener('click', function () {
+    if (!player) return;
+    try { player.unMute(); player.setVolume(100); player.playVideo(); } catch (err) {}
+    hint.hidden = true;
   });
 
   closeBtn.addEventListener('click', close);
