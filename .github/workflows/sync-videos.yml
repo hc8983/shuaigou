@@ -1,0 +1,40 @@
+name: 同步 YouTube 影片
+
+on:
+  schedule:
+    # 每天台北時間早上 4:00（UTC 20:00）跑一次
+    - cron: "0 20 * * *"
+  # 也可以在 Actions 頁面手動按「Run workflow」立刻執行
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-videos
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 取得原始碼
+        uses: actions/checkout@v4
+
+      - name: 抓 YouTube 最新影片
+        run: python3 sync_videos.py
+
+      - name: 重新產生網頁
+        run: python3 build.py src/index.html index.html
+
+      - name: 有變動才提交
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "影片沒有變動，不用更新"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "自動同步 YouTube 影片"
+          git push

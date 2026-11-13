@@ -1,0 +1,599 @@
+<title>帥勾老師</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700;900&family=Space+Grotesk:wght@500;700&display=swap">
+
+<style>
+/* 版面概念：直排標題 × 橫排內文；短影片用直式課次卡，旅遊系列獨立橫幅 */
+:root {
+  --paper:    #FFFFFF;
+  --surface:  #F6F9FC;
+  --ink:      #15202B;
+  --ink-soft: #5A6B7C;
+  --board:    #3C6CA8;
+  --chalk:    #FFFFFF;
+  --zhu:      #3C6CA8;
+  --line:     #DEE5EC;
+
+  --display: "Noto Serif TC", "Songti TC", "SimSun", serif;
+  --body: "PingFang TC", "Hiragino Sans TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  --mono: "Space Grotesk", "SF Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:    #0E141A;
+    --surface:  #161F28;
+    --ink:      #E7EDF3;
+    --ink-soft: #94A6B6;
+    --board:    #1C2E47;
+    --chalk:    #FFFFFF;
+    --zhu:      #6E9DD4;
+    --line:     #253240;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper:    #0E141A;
+  --surface:  #161F28;
+  --ink:      #E7EDF3;
+  --ink-soft: #94A6B6;
+  --board:    #1C2E47;
+  --chalk:    #FFFFFF;
+  --zhu:      #6E9DD4;
+  --line:     #253240;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  z-index: 10;
+  background: var(--board);
+}
+
+a { color: inherit; }
+
+.wrap {
+  max-width: 1080px;
+  margin-inline: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* ---------- 導覽 ---------- */
+.nav {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 9;
+  background: var(--board);
+  color: var(--chalk);
+  border-bottom: 1px solid rgba(255,255,255,.14);
+}
+.nav .wrap {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-block: 12px;
+}
+.nav strong {
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: 1.05rem;
+  letter-spacing: .14em;
+  margin-right: auto;
+}
+.nav a {
+  text-decoration: none;
+  font-size: .85rem;
+  letter-spacing: .08em;
+  color: rgba(255,255,255,.82);
+  padding-block: 4px;
+  border-bottom: 2px solid transparent;
+}
+.nav a:hover, .nav a:focus-visible { color: var(--chalk); border-bottom-color: var(--zhu); }
+.nav-min { display: none; }
+
+/* ---------- 首屏 ---------- */
+.hero {
+  background: var(--board);
+  color: var(--chalk);
+}
+.hero .wrap {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 28px;
+  align-items: center;
+  padding-block: 56px 60px;
+}
+.mark {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: clamp(2.6rem, 9vw, 4.2rem);
+  line-height: 1.05;
+  letter-spacing: .08em;
+  margin: 0;
+  /* 直排四個字＝4.2em 高；給明確高度，grid 列才會跟著長高不被切頭 */
+  height: 4.45em;
+  text-shadow: 0 2px 0 rgba(0,0,0,.18);
+}
+.mark span { color: rgba(255,255,255,.66); }
+.portrait {
+  width: clamp(104px, 26vw, 168px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255,255,255,.75);
+}
+.hero-text { min-width: 0; }
+.hero-text p {
+  margin: 0 0 18px;
+  font-size: clamp(1rem, 2.4vw, 1.15rem);
+  color: rgba(255,255,255,.88);
+  max-width: 34em;
+  text-wrap: pretty;
+}
+.hero-text p b { color: var(--chalk); font-weight: 700; }
+
+.cta-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  border-radius: 2px;
+  text-decoration: none;
+  font-size: .9rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  border: 1.5px solid transparent;
+  transition: transform .15s ease, background .15s ease;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn-line { background: #FFFFFF; color: #3C6CA8; }
+.btn-yt { background: transparent; color: var(--chalk); border-color: rgba(255,255,255,.5); }
+.btn-yt:hover { background: rgba(255,255,255,.12); }
+
+/* ---------- 區塊標題 ---------- */
+section { padding-block: 60px; }
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  border-bottom: 1.5px solid var(--line);
+  padding-bottom: 12px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+.head h2 {
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: clamp(1.4rem, 4vw, 1.9rem);
+  letter-spacing: .1em;
+  margin: 0;
+  position: relative;
+}
+.head h2::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -14px;
+  height: 3px;
+  background: var(--zhu);
+}
+.head .en {
+  font-family: var(--mono);
+  font-size: .78rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.head .count {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: .8rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 下課去 ---------- */
+.vlog {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  overflow: hidden;
+  text-decoration: none;
+}
+.vlog img { width: 100%; height: 100%; object-fit: cover; display: block; max-width: 100%; }
+.vlog-body { padding: 26px 28px; display: flex; flex-direction: column; gap: 12px; justify-content: center; min-width: 0; }
+.series {
+  font-family: var(--mono);
+  font-size: .74rem;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--zhu);
+  font-weight: 700;
+}
+.vlog-body h3 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(1.1rem, 2.6vw, 1.45rem);
+  line-height: 1.5;
+  margin: 0;
+  text-wrap: balance;
+}
+.vlog-body .meta { font-family: var(--mono); font-size: .8rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.vlog:hover h3 { color: var(--zhu); }
+
+/* ---------- 課堂短片 ---------- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+  gap: 20px;
+}
+.card { text-decoration: none; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.shot {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  max-width: 100%;
+  overflow: hidden;
+  background: var(--board);
+  border: 1px solid var(--line);
+}
+.shot img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .35s ease; }
+.card:hover .shot img { transform: scale(1.04); }
+.play {
+  position: absolute;
+  inset: auto 10px 10px auto;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: rgba(21,32,43,.72);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: .68rem;
+  padding-left: 2px;
+}
+.card h3 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: .97rem;
+  line-height: 1.55;
+  margin: 0;
+  text-wrap: pretty;
+}
+.card:hover h3 { color: var(--zhu); }
+.card time {
+  font-family: var(--mono);
+  font-size: .74rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .04em;
+}
+.more { margin-top: 28px; text-align: center; }
+.more a {
+  font-size: .9rem;
+  letter-spacing: .06em;
+  text-decoration: none;
+  border-bottom: 2px solid var(--zhu);
+  padding-bottom: 3px;
+  font-weight: 600;
+}
+
+/* ---------- 文章 ---------- */
+.note {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--zhu);
+  padding: 24px 26px;
+  display: grid;
+  gap: 10px;
+}
+.note h3 { font-family: var(--display); font-weight: 700; font-size: 1.1rem; margin: 0; letter-spacing: .04em; }
+.note p { margin: 0; color: var(--ink-soft); max-width: 46em; }
+.note ul { margin: 4px 0 0; padding-left: 1.2em; color: var(--ink-soft); }
+.note li { margin-bottom: 2px; }
+.soon {
+  font-family: var(--display);
+  font-size: clamp(1.05rem, 3vw, 1.3rem);
+  letter-spacing: .14em;
+  color: var(--ink-soft);
+  margin: 0;
+  padding-block: 28px;
+  text-align: center;
+  border: 1px dashed var(--line);
+  background: var(--surface);
+}
+
+/* ---------- 關於 ---------- */
+.about { display: grid; grid-template-columns: 1fr; gap: 40px; }
+.about p { margin: 0 0 16px; max-width: 34em; text-wrap: pretty; }
+.about p:last-child { margin-bottom: 0; }
+.facts { display: grid; gap: 0; align-content: start; border-top: 1px solid var(--line); }
+.fact {
+  display: grid;
+  grid-template-columns: 7.5em 1fr;
+  gap: 14px;
+  padding-block: 13px;
+  border-bottom: 1px solid var(--line);
+  min-width: 0;
+}
+.fact dt {
+  font-family: var(--mono);
+  font-size: .76rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  padding-top: .35em;
+}
+.fact dd { margin: 0; min-width: 0; }
+.fact dd a { text-decoration: none; border-bottom: 1px solid var(--line); word-break: break-word; }
+.fact dd a:hover { border-bottom-color: var(--zhu); color: var(--zhu); }
+
+/* ---------- 聯絡 ---------- */
+.contact { background: var(--board); color: var(--chalk); }
+.contact .wrap { padding-block: 60px; }
+.contact .head { border-bottom-color: rgba(255,255,255,.2); }
+.contact .head .en, .contact .head .count { color: rgba(255,255,255,.6); }
+.contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.tile {
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.16);
+  padding: 18px 20px;
+  display: grid;
+  gap: 6px;
+  text-decoration: none;
+  min-width: 0;
+}
+.tile:hover { background: rgba(255,255,255,.13); }
+.tile .k {
+  font-family: var(--mono);
+  font-size: .72rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.62);
+}
+.tile .v { font-size: .95rem; word-break: break-word; }
+.mailrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.mailrow code {
+  font-family: var(--mono);
+  font-size: .9rem;
+  user-select: all;
+  word-break: break-all;
+}
+.copy {
+  font: inherit;
+  font-size: .78rem;
+  padding: 4px 11px;
+  border-radius: 2px;
+  border: 1px solid rgba(255,255,255,.4);
+  background: transparent;
+  color: var(--chalk);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.copy:hover { background: rgba(255,255,255,.14); }
+
+footer {
+  background: var(--board);
+  color: rgba(255,255,255,.55);
+  border-top: 1px solid rgba(255,255,255,.14);
+}
+footer .wrap {
+  padding-block: 22px calc(22px + env(safe-area-inset-bottom, 0px));
+  font-family: var(--mono);
+  font-size: .76rem;
+  letter-spacing: .08em;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+:focus-visible { outline: 2px solid var(--zhu); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+@media (max-width: 860px) {
+  .vlog { grid-template-columns: 1fr; }
+  .about { grid-template-columns: 1fr; gap: 28px; }
+}
+@media (max-width: 620px) {
+  .hero .wrap { grid-template-columns: auto 1fr; gap: 16px 18px; padding-block: 32px 36px; }
+  /* 手機上直排太吃高度，改回橫排放在頭像右邊 */
+  .mark {
+    writing-mode: horizontal-tb;
+    height: auto;
+    font-size: clamp(1.8rem, 8.5vw, 2.5rem);
+    letter-spacing: .1em;
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+  }
+  .portrait { grid-column: 1; grid-row: 1; }
+  .hero-text { grid-column: 1 / -1; }
+  .nav strong { display: none; }
+  .nav .wrap { gap: 14px; }
+  .nav a { font-size: .8rem; letter-spacing: .04em; }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
+  section { padding-block: 44px; }
+  .fact { grid-template-columns: 1fr; gap: 2px; }
+  .fact dt { padding-top: 0; }
+}
+</style>
+
+<nav class="nav">
+  <div class="wrap">
+    <strong>帥勾老師</strong>
+    <a href="#clips">課堂短片</a>
+    <a href="#vlog">下課去</a>
+    <a href="#writing">文章</a>
+    <a href="#about">關於</a>
+    <a href="#contact" class="nav-min">聯絡</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <h1 class="mark">帥勾<span>老師</span></h1>
+    <img class="portrait" src="img/avatar.jpg" alt="帥勾老師">
+    <div class="hero-text">
+      <p>把國文課搬到手機上。<b>孟子的君子三樂、荀子的性惡、朱自清家裡的那些事</b>，還有「誅九族」跟「株連九族」到底差在哪——每天一支，在黑板前講完。</p>
+      <div class="cta-row">
+        <a class="btn btn-line" href="https://lin.ee/QqlNlFhE">加 LINE 好友</a>
+        <a class="btn btn-yt" href="https://www.youtube.com/@handsomehook2024">訂閱 YouTube</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section id="vlog">
+  <div class="wrap">
+    <div class="head">
+      <h2>下課去</h2>
+      <span class="en">Travel</span>
+      <span class="count">最新一集</span>
+    </div>
+    <!--VLOG-->
+  </div>
+</section>
+
+<section id="clips">
+  <div class="wrap">
+    <div class="head">
+      <h2>課堂短片</h2>
+      <span class="en">Clips</span>
+      <span class="count">最近 14 支</span>
+    </div>
+    <div class="grid">
+<!--CLIPS-->
+    </div>
+    <p class="more"><a href="https://www.youtube.com/@handsomehook2024/videos">看全部影片 →</a></p>
+  </div>
+</section>
+
+<section id="writing">
+  <div class="wrap">
+    <div class="head">
+      <h2>文章</h2>
+      <span class="en">Writing</span>
+    </div>
+    <p class="soon">（敬請期待）</p>
+  </div>
+</section>
+
+<section id="about">
+  <div class="wrap">
+    <div class="head">
+      <h2>關於</h2>
+      <span class="en">About</span>
+    </div>
+    <div class="about">
+      <div>
+        <p>帥勾老師是一個把國文課拆成一分鐘的教學頻道。站在黑板前，用學生聽得懂的方式講孟子、荀子、朱自清，也順手把「誅」跟「株」、「問 A 答 B」這類容易搞混的地方講清楚。</p>
+        <p>下課之後就是「下課去」——把課本外的世界也拍回來，從首爾的第一場雪開始。</p>
+        <p>這段介紹是暫定版本，之後換成你自己的文字。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<section class="contact" id="contact">
+  <div class="wrap">
+    <div class="head">
+      <h2>聯絡</h2>
+      <span class="en">Contact</span>
+    </div>
+    <div class="contact-grid">
+      <a class="tile" href="https://lin.ee/QqlNlFhE">
+        <span class="k">LINE 官方帳號</span>
+        <span class="v">加好友，直接跟老師聊 →</span>
+      </a>
+      <div class="tile">
+        <span class="k">Email</span>
+        <span class="v mailrow">
+          <code id="mail">handsomehook2024@gmail.com</code>
+          <button class="copy" id="copyBtn" type="button">複製</button>
+        </span>
+      </div>
+      <a class="tile" href="https://www.youtube.com/@handsomehook2024">
+        <span class="k">YouTube</span>
+        <span class="v">@handsomehook2024</span>
+      </a>
+      <a class="tile" href="https://www.instagram.com/deckard_bishop/reels/">
+        <span class="k">Instagram</span>
+        <span class="v">@deckard_bishop</span>
+      </a>
+      <a class="tile" href="https://www.facebook.com/p/%E5%B8%A5%E5%8B%BE%E8%80%81%E5%B8%AB-61578846517354/">
+        <span class="k">Facebook</span>
+        <span class="v">帥勾老師</span>
+      </a>
+      <a class="tile" href="https://www.threads.com/@deckard_bishop?hl=zh-tw">
+        <span class="k">Threads</span>
+        <span class="v">@deckard_bishop</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>帥勾老師</span>
+    <span>國文 × 短影片</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var btn = document.getElementById('copyBtn');
+  var mail = document.getElementById('mail');
+  if (!btn || !mail) return;
+
+  function selectText() {
+    try {
+      var r = document.createRange();
+      r.selectNodeContents(mail);
+      var s = window.getSelection();
+      s.removeAllRanges();
+      s.addRange(r);
+    } catch (e) {}
+  }
+
+  btn.addEventListener('click', function () {
+    var done = function (label) {
+      btn.textContent = label;
+      setTimeout(function () { btn.textContent = '複製'; }, 1800);
+    };
+    try {
+      navigator.clipboard.writeText(mail.textContent.trim())
+        .then(function () { done('已複製'); })
+        .catch(function () { selectText(); done('請手動複製'); });
+    } catch (e) {
+      selectText();
+      done('請手動複製');
+    }
+  });
+})();
+</script>

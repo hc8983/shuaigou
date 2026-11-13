@@ -1,12 +1,14 @@
-"""把 Artifact 版的 index.html 轉成可以獨立上線的靜態網頁。
+"""把 src/index.html（樣板）＋ videos.json（影片資料）組成可以上線的 index.html。
 
-Artifact 平台會自動幫頁面補上 <!doctype>、<head> 和基本 reset，
+樣板是從 Artifact 設計稿來的，Artifact 平台會自動補 doctype／head，
 放到 GitHub Pages 這種一般主機就要自己補，順便加上 SEO 與分享縮圖。
 
-用法：python3 build.py <來源 index.html> <輸出 index.html>
+用法：python3 build.py src/index.html index.html
 """
 
 import hashlib
+import html
+import json
 import os
 import re
 import sys
@@ -37,6 +39,23 @@ HEAD_EXTRA = """<!doctype html>
 <meta name="twitter:title" content="帥勾老師">
 <meta name="twitter:description" content="{desc}">
 <meta name="twitter:image" content="{base}img/avatar.jpg">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "帥勾老師",
+  "description": "{desc}",
+  "url": "{base}",
+  "image": "{base}img/avatar.jpg",
+  "jobTitle": "國文老師",
+  "sameAs": [
+    "https://www.youtube.com/@handsomehook2024",
+    "https://www.instagram.com/deckard_bishop/",
+    "https://www.threads.com/@deckard_bishop",
+    "https://www.facebook.com/p/%E5%B8%A5%E5%8B%BE%E8%80%81%E5%B8%AB-61578846517354/"
+  ]
+}
+</script>
 <style>
 :root { color-scheme: light; }
 html, body { margin: 0; }
@@ -46,26 +65,87 @@ img { max-width: 100%; }
 """
 
 
-def stamp_assets(html, base_dir):
-    """在每個 img/xxx.jpg 後面加上內容雜湊，例如 img/avatar.jpg?v=35290f7c。
+def thumb(video_id):
+    """YouTube 縮圖直連。maxres 偶爾不存在，壞掉就退回 hq。"""
+    hq = f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
+    return (
+        f'src="https://i.ytimg.com/vi/{video_id}/maxresdefault.jpg" '
+        f"onerror=\"this.onerror=null;this.src='{hq}'\""
+    )
 
-    檔案內容一變，網址就變，瀏覽器就會重新抓，不會拿到舊的快取。
-    """
+
+def fmt_date(iso):
+    return iso.replace("-", ".")
+
+
+def render_vlog(v):
+    if not v:
+        return ""
+    ep = re.search(r"EP\s*\d+", v["title"], re.I)
+    label = ep.group(0).upper().replace(" ", "") if ep else "最新一集"
+    title = html.escape(v["title"])
+    return (
+        f'<a class="vlog" href="https://www.youtube.com/watch?v={v["id"]}">\n'
+        f'      <img {thumb(v["id"])} alt="{title}">\n'
+        f'      <div class="vlog-body">\n'
+        f'        <span class="series">下課去 · {label}</span>\n'
+        f"        <h3>{title}</h3>\n"
+        f'        <span class="meta">{fmt_date(v["date"])}</span>\n'
+        f"      </div>\n"
+        f"    </a>"
+    )
+
+
+def render_clips(clips):
+    out = []
+    for v in clips:
+        title = html.escape(v["title"])
+        out.append(
+            f'      <a class="card" href="https://www.youtube.com/watch?v={v["id"]}">\n'
+            f'        <div class="shot"><img {thumb(v["id"])} alt="">'
+            f'<span class="play">▶</span></div>\n'
+            f"        <h3>{title}</h3>\n"
+            f'        <time datetime="{v["date"]}">{fmt_date(v["date"])}</time>\n'
+            f"      </a>"
+        )
+    return "\n\n".join(out)
+
+
+def inject_videos(page):
+    try:
+        with open("videos.json", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except OSError:
+        print("找不到 videos.json，先跑 sync_videos.py", file=sys.stderr)
+        raise
+
+    clips = data.get("clips", [])
+    page = page.replace("<!--VLOG-->", render_vlog(data.get("vlog")))
+    page = page.replace("<!--CLIPS-->", render_clips(clips))
+    page = re.sub(
+        r'(<span class="count">)最近 \d+ 支(</span>)',
+        rf"\g<1>最近 {len(clips)} 支\g<2>",
+        page,
+    )
+    return page
+
+
+def stamp_assets(page, base_dir):
+    """在 img/xxx.jpg 後面加上內容雜湊，換圖時瀏覽器才不會拿到舊快取。"""
     cache = {}
 
     def repl(match):
         path = match.group(1)
         if path not in cache:
-            full = os.path.join(base_dir, path)
             try:
-                with open(full, "rb") as fh:
+                with open(os.path.join(base_dir, path), "rb") as fh:
                     cache[path] = hashlib.md5(fh.read()).hexdigest()[:8]
             except OSError:
                 cache[path] = ""
         tag = cache[path]
         return path + ("?v=" + tag if tag else "")
 
-    return re.sub(r'(img/[A-Za-z0-9_\-]+\.jpg)(?!\?)', repl, html)
+    return re.sub(r"(img/[A-Za-z0-9_\-]+\.jpg)(?!\?)", repl, page)
 
 
 def main():
@@ -76,7 +156,7 @@ def main():
     cut = content.index("</style>") + len("</style>")
     head, body = content[:cut], content[cut:]
 
-    # 這個 meta 只有 Artifact 平台看得懂，一般主機用不到
+    # 這個 meta 只有 Artifact 平台看得懂
     head = re.sub(r'<meta name="claude:viewport-fit-sides"[^>]*>\s*', "", head)
 
     out = (
@@ -87,6 +167,7 @@ def main():
         + "\n</body>\n</html>\n"
     )
 
+    out = inject_videos(out)
     out = stamp_assets(out, os.path.dirname(os.path.abspath(dst)))
 
     with open(dst, "w", encoding="utf-8") as fh:
