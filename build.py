@@ -6,6 +6,8 @@ Artifact 平台會自動幫頁面補上 <!doctype>、<head> 和基本 reset，
 用法：python3 build.py <來源 index.html> <輸出 index.html>
 """
 
+import hashlib
+import os
 import re
 import sys
 
@@ -44,6 +46,28 @@ img { max-width: 100%; }
 """
 
 
+def stamp_assets(html, base_dir):
+    """在每個 img/xxx.jpg 後面加上內容雜湊，例如 img/avatar.jpg?v=35290f7c。
+
+    檔案內容一變，網址就變，瀏覽器就會重新抓，不會拿到舊的快取。
+    """
+    cache = {}
+
+    def repl(match):
+        path = match.group(1)
+        if path not in cache:
+            full = os.path.join(base_dir, path)
+            try:
+                with open(full, "rb") as fh:
+                    cache[path] = hashlib.md5(fh.read()).hexdigest()[:8]
+            except OSError:
+                cache[path] = ""
+        tag = cache[path]
+        return path + ("?v=" + tag if tag else "")
+
+    return re.sub(r'(img/[A-Za-z0-9_\-]+\.jpg)(?!\?)', repl, html)
+
+
 def main():
     src, dst = sys.argv[1], sys.argv[2]
     with open(src, encoding="utf-8") as fh:
@@ -62,6 +86,8 @@ def main():
         + body.strip()
         + "\n</body>\n</html>\n"
     )
+
+    out = stamp_assets(out, os.path.dirname(os.path.abspath(dst)))
 
     with open(dst, "w", encoding="utf-8") as fh:
         fh.write(out)
