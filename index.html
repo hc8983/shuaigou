@@ -154,6 +154,8 @@ a { color: inherit; }
   line-height: 1.05;
   letter-spacing: .08em;
   margin: 0;
+  /* 直排四個字＝4.2em 高；給明確高度，grid 列才會跟著長高不被切頭 */
+  height: 4.45em;
   text-shadow: 0 2px 0 rgba(0,0,0,.18);
 }
 .mark span { color: rgba(255,255,255,.66); }
@@ -440,11 +442,22 @@ footer .wrap {
   .about { grid-template-columns: 1fr; gap: 28px; }
 }
 @media (max-width: 620px) {
-  .hero .wrap { grid-template-columns: auto 1fr; gap: 18px; padding-block: 36px 40px; }
-  .portrait { grid-row: 1; }
+  .hero .wrap { grid-template-columns: auto 1fr; gap: 16px 18px; padding-block: 32px 36px; }
+  /* 手機上直排太吃高度，改回橫排放在頭像右邊 */
+  .mark {
+    writing-mode: horizontal-tb;
+    height: auto;
+    font-size: clamp(1.8rem, 8.5vw, 2.5rem);
+    letter-spacing: .1em;
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+  }
+  .portrait { grid-column: 1; grid-row: 1; }
   .hero-text { grid-column: 1 / -1; }
-  .nav a { display: none; }
-  .nav a.nav-min { display: inline; }
+  .nav strong { display: none; }
+  .nav .wrap { gap: 14px; }
+  .nav a { font-size: .8rem; letter-spacing: .04em; }
   .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
   section { padding-block: 44px; }
   .fact { grid-template-columns: 1fr; gap: 2px; }
