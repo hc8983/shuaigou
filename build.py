@@ -105,7 +105,6 @@ def render_clips(clips):
             f'        <div class="shot"><img {thumb(v["id"])} alt="">'
             f'<span class="play">▶</span></div>\n'
             f"        <h3>{title}</h3>\n"
-            f'        <time datetime="{v["date"]}">{fmt_date(v["date"])}</time>\n'
             f"      </a>"
         )
     return "\n\n".join(out)
@@ -119,14 +118,8 @@ def inject_videos(page):
         print("找不到 videos.json，先跑 sync_videos.py", file=sys.stderr)
         raise
 
-    clips = data.get("clips", [])
     page = page.replace("<!--VLOG-->", render_vlog(data.get("vlog")))
-    page = page.replace("<!--CLIPS-->", render_clips(clips))
-    page = re.sub(
-        r'(<span class="count">)最近 \d+ 支(</span>)',
-        rf"\g<1>最近 {len(clips)} 支\g<2>",
-        page,
-    )
+    page = page.replace("<!--CLIPS-->", render_clips(data.get("clips", [])))
     return page
 
 
