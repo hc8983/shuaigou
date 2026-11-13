@@ -105,7 +105,53 @@ a { color: inherit; }
   padding-block: 4px;
   border-bottom: 2px solid transparent;
 }
-.nav a:hover, .nav a:focus-visible { color: var(--chalk); border-bottom-color: var(--zhu); }
+.nav a:hover, .nav a/* ---------- 原地播放 ---------- */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 56px max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-bottom, 0px));
+  background: rgba(8,14,20,.9);
+}
+.lightbox-inner {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  height: min(78vh, 760px);
+  width: auto;
+  max-width: 100%;
+  background: #000;
+  box-shadow: 0 24px 60px rgba(0,0,0,.5);
+}
+.lightbox[data-ratio="wide"] .lightbox-inner {
+  aspect-ratio: 16 / 9;
+  width: min(100%, 960px);
+  height: auto;
+}
+.lightbox-inner iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
+.lightbox-close {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top, 0px));
+  right: max(12px, env(safe-area-inset-right, 0px));
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.35);
+  background: rgba(255,255,255,.1);
+  color: #fff;
+  font: inherit;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.lightbox-close:hover { background: rgba(255,255,255,.22); }
+@media (max-width: 620px) {
+  .lightbox { padding-top: 64px; }
+  .lightbox-inner { height: min(70vh, 640px); }
+}
+
+:focus-visible { color: var(--chalk); border-bottom-color: var(--zhu); }
 .nav-min { display: none; }
 
 /* ---------- 首屏 ---------- */
@@ -565,6 +611,13 @@ footer .wrap {
   </div>
 </footer>
 
+<div class="lightbox" id="lightbox" data-ratio="tall" hidden>
+  <button class="lightbox-close" id="lightboxClose" type="button" aria-label="關閉影片">✕</button>
+  <div class="lightbox-inner">
+    <iframe id="player" title="影片播放器" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  </div>
+</div>
+
 <script>
 (function () {
   var btn = document.getElementById('copyBtn');
@@ -594,6 +647,56 @@ footer .wrap {
       selectText();
       done('請手動複製');
     }
+  });
+})();
+</script>
+
+<script>
+/* 點影片卡 → 原地彈出 YouTube 播放器，不跳離網頁。
+   仍保留原本的 <a href>，所以按 ⌘ 或中鍵一樣能開新分頁。 */
+(function () {
+  var box = document.getElementById('lightbox');
+  var frame = document.getElementById('player');
+  var closeBtn = document.getElementById('lightboxClose');
+  if (!box || !frame || !closeBtn) return;
+
+  var lastFocus = null;
+
+  function open(id, ratio, trigger) {
+    lastFocus = trigger || null;
+    box.dataset.ratio = ratio;
+    frame.src = 'https://www.youtube-nocookie.com/embed/' + id +
+                '?autoplay=1&rel=0&playsinline=1';
+    box.hidden = false;
+    document.documentElement.style.overflow = 'hidden';
+    closeBtn.focus();
+  }
+
+  function close() {
+    box.hidden = true;
+    frame.src = '';                       // 清掉才會真的停止播放
+    document.documentElement.style.overflow = '';
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+    lastFocus = null;
+  }
+
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest) return;
+    var link = e.target.closest('a.card, a.vlog');
+    if (!link) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var m = link.getAttribute('href').match(/[?&]v=([A-Za-z0-9_-]+)/);
+    if (!m) return;
+    e.preventDefault();
+    open(m[1], link.classList.contains('vlog') ? 'wide' : 'tall', link);
+  });
+
+  closeBtn.addEventListener('click', close);
+  box.addEventListener('click', function (e) {
+    if (e.target === box) close();        // 點旁邊的暗色區域也關閉
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !box.hidden) close();
   });
 })();
 </script>
